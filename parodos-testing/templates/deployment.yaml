@@ -1,0 +1,195 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parodos-testing.fullname" . }}-ldap-deployment
+  labels:
+  {{- include "parodos-testing.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: ldap-service
+    {{- include "parodos-testing.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: ldap-service
+      {{- include "parodos-testing.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - args: {{- toYaml .Values.ldapDeployment.ldapService.args | nindent 8 }}
+        env:
+        - name: LDAP_PORT
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapPort }}
+        - name: LDAP_SEED_INTERNAL_LDIF_PATH
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapSeedInternalLdifPath
+            }}
+        - name: SPRING_PROFILES_ACTIVE
+          value: {{ quote .Values.ldapDeployment.ldapService.env.springProfilesActive }}
+        - name: LDAP_LOG_LEVEL
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapLogLevel }}
+        - name: LDAP_ORGANISATION
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapOrganisation }}
+        - name: LDAP_DOMAIN
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapDomain }}
+        - name: LDAP_BASE_DN
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapBaseDn }}
+        - name: LDAP_ADMIN_PASSWORD
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapAdminPassword }}
+        - name: LDAP_CONFIG_PASSWORD
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapConfigPassword }}
+        - name: LDAP_TLS_CRT_FILENAME
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapTlsCrtFilename }}
+        - name: LDAP_TLS_KEY_FILENAME
+          value: {{ quote .Values.ldapDeployment.ldapService.env.ldapTlsKeyFilename }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.ldapDeployment.ldapService.image.repository }}:{{ .Values.ldapDeployment.ldapService.image.tag
+          | default .Chart.AppVersion }}
+        name: ldap-service
+        ports:
+        - containerPort: 389
+          name: ldap-insecure
+        resources: {}
+        volumeMounts:
+        - mountPath: /ldif/
+          name: ldif-volume
+      imagePullSecrets: {{ .Values.imagePullSecrets | default list | toJson }}
+      volumes:
+      - configMap:
+          name: {{ include "parodos-testing.fullname" . }}-ldif-config-td2h4849h2
+        name: ldif-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parodos-testing.fullname" . }}-notification-service
+  labels:
+  {{- include "parodos-testing.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: notification-service
+    {{- include "parodos-testing.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: notification-service
+      {{- include "parodos-testing.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "parodos-testing.fullname" . }}-notification-service-config
+        image: {{ .Values.notificationService.notificationService.image.repository }}:{{
+          .Values.notificationService.notificationService.image.tag | default .Chart.AppVersion
+          }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          timeoutSeconds: 4
+        name: notification-service
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          timeoutSeconds: 4
+        resources: {}
+      imagePullSecrets: {{ .Values.imagePullSecrets | default list | toJson }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parodos-testing.fullname" . }}-postgres-deployment
+  labels:
+  {{- include "parodos-testing.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: postgres-service
+    {{- include "parodos-testing.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: postgres-service
+      {{- include "parodos-testing.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "parodos-testing.fullname" . }}-postgres-service-config
+        image: {{ .Values.postgresDeployment.postgresService.image.repository }}:{{ .Values.postgresDeployment.postgresService.image.tag
+          | default .Chart.AppVersion }}
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+          initialDelaySeconds: 15
+          timeoutSeconds: 2
+        name: postgres-service
+        ports:
+        - containerPort: 5432
+          name: insecure
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+          initialDelaySeconds: 15
+          timeoutSeconds: 2
+        resources: {}
+      imagePullSecrets: {{ .Values.imagePullSecrets | default list | toJson }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parodos-testing.fullname" . }}-workflow-service
+  labels:
+  {{- include "parodos-testing.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: workflow-service
+    {{- include "parodos-testing.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: workflow-service
+      {{- include "parodos-testing.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "parodos-testing.fullname" . }}-workflow-service-config
+        image: {{ .Values.workflowService.workflowService.image.repository }}:{{ .Values.workflowService.workflowService.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.workflowService.workflowService.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 25
+          timeoutSeconds: 4
+        name: workflow-service
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 25
+          timeoutSeconds: 4
+        resources: {}
+      imagePullSecrets: {{ .Values.imagePullSecrets | default list | toJson }}

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "parodos-testing.fullname" . }}-postgres-service-config
+  labels:
+  {{- include "parodos-testing.labels" . | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .Values.postgresServiceConfig.postgresDb | quote }}
+  POSTGRES_PASSWORD: {{ .Values.postgresServiceConfig.postgresPassword | quote }}
+  POSTGRES_USER: {{ .Values.postgresServiceConfig.postgresUser | quote }}
