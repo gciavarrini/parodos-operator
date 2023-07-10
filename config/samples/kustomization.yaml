@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- charts_v1alpha1_parodos.yaml
+- charts_v1_parodosv1018.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
