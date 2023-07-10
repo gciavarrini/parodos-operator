@@ -237,12 +237,12 @@ $(HELMIFY): $(LOCALBIN)
 # Download manifest.yml
 .PHONY: download-manifest
 download-manifest:
-	curl -LO https://github.com/parodos-dev/parodos/releases/download/v1.0.17/manifests.yaml
+	curl -LO https://github.com/parodos-dev/parodos/releases/download/v1.0.18/manifests.yaml
 
 # Generate  Helm chart via helmify
-.PHONY: generate-helmcart
+.PHONY: generate-helmchart
 generate-helmcart:
-	cat manifests.yaml | helmify -c mychart
+	cat manifests.yaml | helmify helm-charts/parodos-v1.0.18
 
 
 helm: manifests kustomize helmify
