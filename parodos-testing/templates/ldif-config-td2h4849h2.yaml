@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "parodos-testing.fullname" . }}-ldif-config-td2h4849h2
-  labels:
-  {{- include "parodos-testing.labels" . | nindent 4 }}
-data:
-  test-server.ldif: {{ .Values.ldifConfigTd2H4849H2.testServerLdif | toYaml | indent
-    1 }}

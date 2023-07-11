@@ -1,9 +1,0 @@
-apiVersion: charts.redhat.com/v1
-kind: ParodosV1018
-metadata:
-  name: parodosv1018-sample
-spec:
-  # Default values copied from <project_dir>/helm-charts/parodos-v.1.0.18/values.yaml
-  kubernetesClusterDomain: cluster.local
-  
-  
